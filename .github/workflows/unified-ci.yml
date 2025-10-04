@@ -1,10 +1,10 @@
 name: Unified CI - Backend & Frontend
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch: 
   push:
     branches:
-        - testing         # C triggers on push to 'testing' branch
+        - testing        
     paths:
       - 'backend/**'
       - 'frontend/**'
