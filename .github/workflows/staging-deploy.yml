@@ -2,7 +2,7 @@ name: Staging CD - Deploy to Temporary Environment
 
 on:
   workflow_run:
-    workflows: ["Unified CI -Backend & Frontend"]
+    workflows: ["Unified CI - Backend & Frontend"]
     types:
       - completed
 
