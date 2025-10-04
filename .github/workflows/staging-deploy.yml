@@ -1,0 +1,64 @@
+name: Staging CD - Deploy to Temporary Environment
+
+on:
+  workflow_run:
+    workflows: ["Unified CI -Backend & Frontend"]
+    types:
+      - completed
+
+jobs:
+  deploy_staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS Context (Staging Cluster)
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ secrets.STAGING_RG }} \
+            --name ${{ secrets.STAGING_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      
+      - name: Deploy Infra
+        run: |
+          cd k8s/
+          kubectl apply -f configmaps.yaml
+          kubectl apply -f secrets.yaml
+          kubectl apply -f product-db.yaml
+          kubectl apply -f order-db.yaml
+
+      - name: Deploy Backend & Frontend
+        run: |
+          cd k8s/
+          kubectl apply -f product-service.yaml
+          kubectl apply -f order-service.yaml
+          kubectl apply -f frontend.yaml
+
+      - name: (Optional) Run Acceptance Tests
+        run: echo "Add curl or pytest here to hit endpoints"
+
+      - name: Destroy Staging Environment
+        run: |
+          echo "Cleaning up staging..."
+          cd k8s/
+          kubectl delete -f frontend.yaml
+          kubectl delete -f order-service.yaml
+          kubectl delete -f product-service.yaml
+          kubectl delete -f product-db.yaml
+          kubectl delete -f order-db.yaml
+          kubectl delete -f configmaps.yaml
+          kubectl delete -f secrets.yaml
+
+      - name: Logout Azure
+        if: always()
+        run: az logout
