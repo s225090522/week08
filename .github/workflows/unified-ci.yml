@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # Manual trigger
   push:
     branches:
-        - testing         # C triggers on push to 'testing' branch
+       - testing         # C triggers on push to 'testing' branch
     paths:
       - 'backend/**'
       - 'frontend/**'
